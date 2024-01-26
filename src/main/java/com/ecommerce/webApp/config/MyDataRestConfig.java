@@ -1,12 +1,10 @@
 package com.ecommerce.webApp.config;
 
-import com.ecommerce.webApp.entity.Country;
-import com.ecommerce.webApp.entity.Product;
-import com.ecommerce.webApp.entity.ProductCategory;
-import com.ecommerce.webApp.entity.State;
+import com.ecommerce.webApp.entity.*;
 import jakarta.persistence.EntityManager;
 import org.hibernate.type.EntityType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
@@ -20,6 +18,8 @@ import java.util.stream.Collectors;
 @Configuration
 public class MyDataRestConfig implements RepositoryRestConfigurer {
 
+    @Value("${allowed.origins}")
+    private String[] theAllowedOrigins;
     private EntityManager entityManager;
 
     @Autowired
@@ -31,14 +31,17 @@ public class MyDataRestConfig implements RepositoryRestConfigurer {
         HttpMethod[] theUnsupportedActions = {HttpMethod.PUT, HttpMethod.POST, HttpMethod.DELETE, HttpMethod.PATCH};
 
         // disable HTTP methods for Product: PUT, POST, DELETE and PATCH
-       disableHttpMethods(Product.class, config, theUnsupportedActions);
-        // disable HTTP methods for ProductCategory: PUT, POST, DELETE and PATCH
+        disableHttpMethods(Product.class, config, theUnsupportedActions);
         disableHttpMethods(ProductCategory.class, config, theUnsupportedActions);
         disableHttpMethods(Country.class, config, theUnsupportedActions);
         disableHttpMethods(State.class, config, theUnsupportedActions);
+        disableHttpMethods(Order.class, config, theUnsupportedActions);
 
         // call an internal helper method
         exposeIds(config);
+
+        // configure cors mapping
+        cors.addMapping(config.getBasePath() + "/**").allowedOrigins(theAllowedOrigins);
     }
 
     private static void disableHttpMethods(Class theClass, RepositoryRestConfiguration config, HttpMethod[] theUnsupportedActions) {
